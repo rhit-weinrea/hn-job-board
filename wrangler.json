@@ -1,0 +1,20 @@
+{
+  "name": "whoishiring-app",
+  "type": "javascript",
+  "account_id": "667abf4c0303cdd1940e5d4b5dcb3fdc",
+  "workers_dev": true,
+  "route": null,
+  "zone_id": "5586232f9439d32ec110821c46afa76d",
+  "build": {
+    "command": "npm run build",
+    "cwd": "frontend",
+    "upload": {
+      "format": "directory",
+      "dir": "frontend/out"
+    }
+  },
+  "site": {
+    "bucket": "frontend/out",
+    "entry-point": "frontend"
+  }
+}
