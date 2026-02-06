@@ -1,6 +1,42 @@
 // Custom network bridge with session persistence
 const VAULT_KEY = 'hn_session_vault';
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000');
+const API_ROOT = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000/api/v1');
+
+const resolveRemoteFlag = (remoteStatus?: string | boolean) => {
+  if (typeof remoteStatus === 'boolean') return remoteStatus;
+  if (!remoteStatus) return false;
+  return remoteStatus.toLowerCase().includes('remote');
+};
+
+const extractRolesFromSummary = (summary?: string) => {
+  if (!summary) return { roles: [] as string[], cleaned: summary || '' };
+  const lines = summary.split('\n');
+  if (!lines[0]?.toLowerCase().startsWith('roles:')) {
+    return { roles: [] as string[], cleaned: summary };
+  }
+  const roles: string[] = [];
+  let idx = 1;
+  while (idx < lines.length && lines[idx].trim().startsWith('-')) {
+    roles.push(lines[idx].replace(/^\s*-\s*/, '').trim());
+    idx += 1;
+  }
+  const cleaned = lines.slice(idx).join('\n').trim();
+  return { roles, cleaned };
+};
+
+const mapJobToListing = (job: any) => ({
+  id: job.job_id ?? job.id,
+  hnItemId: job.hn_item_id ?? job.hnItemId,
+  title: job.posting_title ?? job.title ?? 'Untitled role',
+  company: job.company_name ?? job.company ?? 'Unknown',
+  location: job.job_location ?? job.location ?? 'Unspecified',
+  description: job.job_description ?? job.description ?? '',
+  posted_at: job.parsed_timestamp ?? job.posted_at ?? new Date().toISOString(),
+  url: job.application_url ?? job.url,
+  remote: resolveRemoteFlag(job.remote_status ?? job.remote),
+  salary: job.salary_range ?? job.salary,
+  tech: job.tech_stack ?? job.technologies ?? [],
+});
 
 if (!API_ROOT && process.env.NODE_ENV === 'production') {
   throw new Error('NEXT_PUBLIC_API_URL must be configured in production');
@@ -60,7 +96,7 @@ const bridge = new NetworkBridge();
 // Credential operations
 export const authenticateViaCredentials = async (mailAddress: string, secretCode: string) => {
   const outcome = await bridge.transmit('/auth/login', 'POST', { 
-    email: mailAddress, 
+    username: mailAddress, 
     password: secretCode 
   });
   if (outcome.access_token) {
@@ -71,7 +107,7 @@ export const authenticateViaCredentials = async (mailAddress: string, secretCode
 
 export const forgeNewAccount = async (mailAddress: string, secretCode: string, alias: string) => {
   const outcome = await bridge.transmit('/auth/register', 'POST', { 
-    email: mailAddress, 
+    email_address: mailAddress, 
     password: secretCode, 
     username: alias 
   });
@@ -91,47 +127,105 @@ export const queryEmploymentListings = async (criteria?: {
   territoryFilter?: string;
   distantWorkFlag?: boolean;
 }) => {
-  let querySegment = '';
-  if (criteria) {
-    const paramBag = new URLSearchParams();
-    if (criteria.phraseQuery) paramBag.append('q', criteria.phraseQuery);
-    if (criteria.territoryFilter) paramBag.append('location', criteria.territoryFilter);
-    if (criteria.distantWorkFlag !== undefined) paramBag.append('remote', String(criteria.distantWorkFlag));
-    querySegment = paramBag.toString() ? `?${paramBag.toString()}` : '';
+  const paramBag = new URLSearchParams();
+
+  if (criteria?.phraseQuery) {
+    paramBag.append('search_term', criteria.phraseQuery);
+    const data = await bridge.transmit(`/jobs/search/text?${paramBag.toString()}`, 'GET');
+    return data.map(mapJobToListing);
   }
-  return bridge.transmit(`/jobs${querySegment}`, 'GET');
+
+  if (criteria?.territoryFilter) paramBag.append('location_query', criteria.territoryFilter);
+  if (criteria?.distantWorkFlag) paramBag.append('remote_filter', 'remote');
+
+  const querySegment = paramBag.toString() ? `?${paramBag.toString()}` : '';
+  const data = await bridge.transmit(`/jobs/browse${querySegment}`, 'GET');
+  return data.flatMap((job: any) => {
+    const base = mapJobToListing(job);
+    const { roles, cleaned } = extractRolesFromSummary(base.description);
+    if (!roles.length) {
+      return [{ ...base, description: cleaned }];
+    }
+    return roles.map((role) => ({
+      ...base,
+      title: role,
+      description: cleaned,
+    }));
+  });
 };
 
 export const pinListing = async (listingIdentifier: number) => {
-  return bridge.transmit('/saved-jobs', 'POST', { job_id: listingIdentifier });
+  const data = await bridge.transmit('/saved-jobs/save', 'POST', { job_posting_id: listingIdentifier });
+  return {
+    saved_id: data.saved_id ?? data.id,
+    job_id: data.job_posting_id ?? listingIdentifier,
+  };
 };
 
-export const unpinListing = async (listingIdentifier: number) => {
-  return bridge.transmit(`/saved-jobs/${listingIdentifier}`, 'DELETE');
+export const unpinListing = async (savedIdentifier: number) => {
+  return bridge.transmit(`/saved-jobs/${savedIdentifier}`, 'DELETE');
 };
 
 export const recallPinnedListings = async () => {
-  return bridge.transmit('/saved-jobs', 'GET');
+  const data = await bridge.transmit('/saved-jobs/my-saved-jobs', 'GET');
+  return data.flatMap((entry: any) => {
+    const posting = entry.posting_rel || {};
+    const base = {
+      saved_id: entry.saved_id ?? entry.id,
+      job_id: entry.job_posting_id ?? posting.job_id ?? entry.job_id,
+      hnItemId: posting.hn_item_id ?? entry.hn_item_id,
+      ...mapJobToListing(posting),
+    };
+    const { roles, cleaned } = extractRolesFromSummary(base.description);
+    if (!roles.length) {
+      return [{ ...base, description: cleaned }];
+    }
+    return roles.map((role) => ({
+      ...base,
+      title: role,
+      description: cleaned,
+    }));
+  });
 };
 
 // Profile configuration operations
 export const fetchProfileConfig = async () => {
-  return bridge.transmit('/preferences', 'GET');
+  const data = await bridge.transmit('/preferences/my-preferences', 'GET');
+  return {
+    keywords: data.keywords_to_match || [],
+    locations: data.preferred_locations || [],
+    tech_keywords: data.preferred_tech_stack || [],
+    remote_preference: data.remote_only || false,
+    visa_sponsorship_only: data.visa_sponsorship_only || false,
+    email_alerts: data.notification_enabled || false,
+  };
 };
 
 export const persistProfileConfig = async (configuration: {
   keywords?: string[];
   locations?: string[];
-  job_types?: string[];
+  tech_keywords?: string[];
   remote_preference?: boolean;
-  salary_min?: number;
+  visa_sponsorship_only?: boolean;
   email_alerts?: boolean;
 }) => {
-  return bridge.transmit('/preferences', 'PUT', configuration);
+  return bridge.transmit('/preferences/my-preferences', 'PUT', {
+    preferred_locations: configuration.locations,
+    preferred_tech_stack: configuration.tech_keywords,
+    remote_only: configuration.remote_preference ?? false,
+    keywords_to_match: configuration.keywords ?? [],
+    visa_sponsorship_only: configuration.visa_sponsorship_only ?? false,
+    notification_enabled: configuration.email_alerts ?? false,
+  });
+};
+
+export const fetchLocationSuggestions = async (query: string, limit = 5) => {
+  const params = new URLSearchParams({ query, limit: `${limit}` });
+  return bridge.transmit(`/locations/suggest?${params.toString()}`, 'GET');
 };
 
 export const verifyIdentity = async () => {
-  return bridge.transmit('/auth/me', 'GET');
+  return bridge.transmit('/auth/profile', 'GET');
 };
 
 export { bridge };

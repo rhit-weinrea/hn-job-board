@@ -7,8 +7,9 @@ import EmploymentCard from '@/components/EmploymentCard';
 import { recallPinnedListings, unpinListing } from '@/lib/api';
 
 type PinnedRecord = {
-  id: number;
+  saved_id: number;
   job_id: number;
+  hnItemId?: string;
   title: string;
   company: string;
   location: string;
@@ -54,10 +55,10 @@ export default function PinnedCollection() {
     }
   };
 
-  const executeUnpin = async (jobIdentifier: number) => {
+  const executeUnpin = async (savedIdentifier: number) => {
     try {
-      await unpinListing(jobIdentifier);
-      setPinnedRecords(previous => previous.filter(record => record.job_id !== jobIdentifier));
+      await unpinListing(savedIdentifier);
+      setPinnedRecords(previous => previous.filter(record => record.saved_id !== savedIdentifier));
     } catch (fault) {
       console.error('Unpin operation failed:', fault);
     }
@@ -69,8 +70,9 @@ export default function PinnedCollection() {
       
       <main className="container mx-auto px-6 py-8">
         <div className="mb-8">
-          <h2 className="text-4xl font-black text-gray-900 mb-2">
-            ⭐ Pinned Collection
+          <h2 className="text-4xl font-black text-gray-900 mb-2 flex items-center gap-2">
+            <i className="bi bi-star" aria-hidden="true" />
+            Pinned Collection
           </h2>
           <p className="text-gray-600">
             Your preserved listings for reference
@@ -78,28 +80,35 @@ export default function PinnedCollection() {
         </div>
 
         {faultMessage && (
-          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r text-red-800">
-            ⚠️ {faultMessage}
+          <div className="mb-6 p-4 bg-white border-2 border-red-500 rounded text-red-800">
+            <span className="inline-flex items-center gap-2">
+              <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+              {faultMessage}
+            </span>
           </div>
         )}
 
         {isRetrieving ? (
           <div className="flex justify-center items-center h-64">
             <div className="text-center">
-              <div className="text-6xl mb-4 animate-bounce">⏳</div>
+              <div className="text-6xl mb-4 animate-bounce">
+                <i className="bi bi-hourglass" aria-hidden="true" />
+              </div>
               <p className="text-gray-600 font-bold">Retrieving pins...</p>
             </div>
           </div>
         ) : pinnedRecords.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-lg border-2 border-gray-200">
-            <div className="text-6xl mb-4">📚</div>
+          <div className="text-center py-16 bg-white rounded-xl border-2 border-slate-grey-200">
+            <div className="text-6xl mb-4">
+              <i className="bi bi-book" aria-hidden="true" />
+            </div>
             <p className="text-xl text-gray-600 font-bold">Collection empty</p>
             <p className="text-gray-500 mt-2">Pin listings from the browser</p>
             <button
               onClick={() => routeController.push('/dashboard')}
-              className="mt-6 bg-gradient-to-r from-hn-orange to-orange-600 text-white px-6 py-3 rounded-lg font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="mt-6 bg-smoky-rose-500 text-white px-6 py-3 rounded-lg font-bold transition-all border-2 border-smoky-rose-500"
             >
-              🎯 Browse Listings
+              Browse Listings
             </button>
           </div>
         ) : (
@@ -110,9 +119,10 @@ export default function PinnedCollection() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {pinnedRecords.map((record) => (
                 <EmploymentCard
-                  key={record.id}
+                  key={`${record.saved_id}-${record.title}`}
                   listing={{
-                    id: record.job_id,
+                    id: record.saved_id,
+                    hnItemId: record.hnItemId,
                     title: record.title,
                     company: record.company,
                     location: record.location,

@@ -13,17 +13,17 @@ export default function NavigationBeam() {
   };
 
   const linkRegistry = [
-    { path: '/dashboard', text: '🎯 Listings', emoji: '🎯' },
-    { path: '/dashboard/pinned', text: '⭐ Pinned', emoji: '⭐' },
-    { path: '/dashboard/profile', text: '⚙️ Profile', emoji: '⚙️' },
+    { path: '/dashboard', text: 'Listings', icon: 'bi-list' },
+    { path: '/dashboard/pinned', text: 'Pinned', icon: 'bi-star' },
+    { path: '/dashboard/profile', text: 'Profile', icon: 'bi-gear' },
   ];
 
   return (
-    <nav className="bg-gradient-to-r from-slate-900 to-gray-900 border-b-4 border-hn-orange shadow-xl">
+    <nav className="bg-slate-grey-900 border-b-2 border-smoky-rose-500">
       <div className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="text-3xl">🔶</span>
+            <i className="bi bi-briefcase text-white text-2xl" aria-hidden="true" />
             <h1 className="text-2xl font-black text-white">
               HN Career Hub
             </h1>
@@ -36,22 +36,28 @@ export default function NavigationBeam() {
                 <Link
                   key={entry.path}
                   href={entry.path}
-                  className={`px-4 py-2 rounded-lg font-bold transition-all transform hover:scale-105 ${
+                  className={`px-4 py-2 rounded-lg font-bold transition-all ${
                     isCurrentRoute
-                      ? 'bg-hn-orange text-white shadow-lg'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      ? 'bg-smoky-rose-500 text-white border-2 border-smoky-rose-500'
+                      : 'text-gray-300 hover:text-white border-2 border-transparent hover:border-smoky-rose-500'
                   }`}
                 >
-                  {entry.text}
+                  <span className="inline-flex items-center gap-2">
+                    <i className={`bi ${entry.icon}`} aria-hidden="true" />
+                    {entry.text}
+                  </span>
                 </Link>
               );
             })}
 
             <button
               onClick={executeLogout}
-              className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="ml-4 px-4 py-2 bg-transparent text-white rounded-lg font-bold hover:bg-slate-grey-800 transition-all border-2 border-smoky-rose-500"
             >
-              🚪 Logout
+              <span className="inline-flex items-center gap-2">
+                <i className="bi bi-box-arrow-right" aria-hidden="true" />
+                Logout
+              </span>
             </button>
           </div>
         </div>

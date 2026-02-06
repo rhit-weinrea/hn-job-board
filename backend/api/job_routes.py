@@ -6,6 +6,7 @@ from backend.core.database_engine import acquire_db_session
 from backend.data_models.schemas import JobData
 from backend.data_models.models import UserAccount, JobPosting
 from backend.utilities.authentication import extract_current_user
+from backend.utilities.location import normalize_location
 
 job_api = APIRouter(prefix="/jobs", tags=["Job Postings"])
 
@@ -29,7 +30,9 @@ async def browse_postings(
         filters.append(JobPosting.remote_status == remote_filter.lower())
     
     if location_query:
-        filters.append(JobPosting.job_location.ilike(f"%{location_query}%"))
+        normalized = normalize_location(location_query)
+        normalized_value = normalized.normalized if normalized else location_query
+        filters.append(JobPosting.job_location.ilike(f"%{normalized_value}%"))
     
     if tech_filter:
         filters.append(JobPosting.tech_stack.any(tech_filter.lower()))

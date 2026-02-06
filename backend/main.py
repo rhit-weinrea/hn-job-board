@@ -8,6 +8,8 @@ from backend.api.job_routes import job_api
 from backend.api.preferences_routes import pref_api
 from backend.api.saved_jobs_routes import bookmark_api
 from backend.api.scraper_routes import scraper_api
+from backend.api.location_routes import location_api
+from backend.api.notification_routes import notification_api
 
 config = fetch_environment_config()
 
@@ -43,6 +45,8 @@ app.include_router(job_api, prefix="/api/v1")
 app.include_router(pref_api, prefix="/api/v1")
 app.include_router(bookmark_api, prefix="/api/v1")
 app.include_router(scraper_api, prefix="/api/v1")
+app.include_router(location_api, prefix="/api/v1")
+app.include_router(notification_api, prefix="/api/v1")
 
 
 @app.get("/")
@@ -73,7 +77,9 @@ async def api_status():
             "jobs": "/api/v1/jobs",
             "preferences": "/api/v1/preferences",
             "saved_jobs": "/api/v1/saved-jobs",
-            "admin": "/api/v1/admin"
+            "admin": "/api/v1/admin",
+            "locations": "/api/v1/locations",
+            "notifications": "/api/v1/admin/trigger-notifications"
         }
     }
 
@@ -81,7 +87,7 @@ async def api_status():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "main:app",
+        "backend.main:app",
         host="0.0.0.0",
         port=8000,
         reload=config.DEBUG_MODE

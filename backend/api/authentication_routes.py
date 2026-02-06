@@ -73,7 +73,7 @@ async def authenticate(
     account.last_login_timestamp = datetime.now(timezone.utc)
     await session.commit()
     
-    token = craft_access_token(data={"sub": account.username})
+    token = craft_access_token(payload={"sub": account.username})
     
     return AuthTokenPayload(access_token=token, token_type="bearer")
 

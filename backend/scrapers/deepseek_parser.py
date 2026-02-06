@@ -14,20 +14,39 @@ class AIJobParser:
         self.model_name = config.DEEPSEEK_MODEL
     
     async def parse_using_ai(self, raw_text: str) -> Optional[Dict]:
-        system_instruction = """Extract job details from HackerNews posting and return JSON only:
+        system_instruction = """You are parsing Hacker News job postings. Return JSON only, no markdown.
+    Normalize names and titles for clarity (e.g., "developery-data person" -> "Developer/Analyst").
+    Use Title Case for role titles and company names. Expand abbreviations when clear, Keep summary as a concise, neutral summary of the role/company; avoid repeating the role title, skills, location, visa information,company name, raw URLs,email addresses, etc..
+    If multiple roles are listed, include each role as a separate entry in roles.
 {
-  "company": "company name",
-  "title": "job title",
-  "location": "location",
-  "remote_status": "remote/hybrid/onsite or null",
-  "technologies": ["tech", "stack"],
-  "salary": "salary range or null",
-  "url": "application URL or null",
-  "description": "brief description (max 500 chars)"
+    "is_posting": true/false,
+    "company": "company name or null",
+    "roles": [
+        {
+            "title": "role title",
+            "seniority": "intern/junior/mid/senior/lead/staff/principal/unknown",
+            "employment_type": "full-time/part-time/contract/intern/unknown"
+        }
+    ],
+    "location": "city, region, country or Remote or null",
+    "workplace_type": "remote/hybrid/onsite/unknown",
+    "visa_sponsorship": "yes/no/unknown",
+    "posted_at": "ISO date string if present in text else null",
+    "apply_url": "application URL or null",
+    "apply_contact": "email or instructions or null",
+    "technologies": ["tech", "stack"],
+    "salary": "salary range or null",
+    "summary": "brief summary (max 500 chars)"
 }
-Return only JSON, no markdown or extra text."""
+
+Rules:
+- Set is_posting=false if the text is a reply/comment, discussion, or non-job content.
+- If multiple roles are present, include each in roles; otherwise a single role is fine.
+- If no clear role title, leave roles empty.
+- Keep summary as a concise, neutral summary of the role/company; avoid repeating the role title, skills, location, visa information,company name, raw URLs,email addresses.
+"""
         
-        user_content = f"Parse this job:\n\n{raw_text[:2000]}"
+        user_content = f"Parse this posting:\n\n{raw_text[:2000]}"
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:

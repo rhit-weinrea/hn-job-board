@@ -37,11 +37,13 @@ class PreferencesPayload(BaseModel):
     preferred_locations: Optional[List[str]] = None
     preferred_tech_stack: Optional[List[str]] = None
     remote_only: bool = False
+    visa_sponsorship_only: bool = False
     min_salary: Optional[int] = None
     max_salary: Optional[int] = None
     keywords_to_match: Optional[List[str]] = None
     keywords_to_exclude: Optional[List[str]] = None
     notification_enabled: bool = True
+    last_notified_timestamp: Optional[datetime] = None
 
 
 class PreferencesData(PreferencesPayload):
@@ -97,6 +99,9 @@ class BookmarkedJobData(BaseModel):
 class ScraperPayload(BaseModel):
     admin_api_key: str
     force_refresh: bool = False
+    parse: bool = True
+    who_is_hiring_id: str | None = None
+    max_items: int | None = None
 
 
 class ScraperResultData(BaseModel):

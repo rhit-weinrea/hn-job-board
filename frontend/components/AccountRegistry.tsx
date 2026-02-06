@@ -48,17 +48,20 @@ export default function AccountRegistry({ onAccountCreated, returnToEntry }: Reg
   };
 
   return (
-    <div className="w-full max-w-md p-8 bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl shadow-2xl border-2 border-slate-200">
+    <div className="w-full max-w-md p-8 bg-white rounded-xl border-2 border-slate-grey-200">
       <div className="mb-6">
-        <h2 className="text-3xl font-black mb-2 bg-gradient-to-r from-hn-orange to-orange-600 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-black mb-2 text-slate-grey-900">
           Account Registry
         </h2>
         <p className="text-sm text-gray-600">Craft your identity</p>
       </div>
       
       {alertMsg && (
-        <div className="mb-5 p-4 bg-gradient-to-r from-amber-50 to-yellow-100 border-l-4 border-yellow-500 rounded-r text-yellow-800 text-sm font-medium">
-          ⚠️ {alertMsg}
+        <div className="mb-5 p-4 bg-white border-2 border-yellow-500 rounded text-yellow-800 text-sm font-medium">
+          <span className="inline-flex items-center gap-2">
+            <i className="bi bi-exclamation-triangle text-black" aria-hidden="true" />
+            {alertMsg}
+          </span>
         </div>
       )}
 
@@ -74,7 +77,7 @@ export default function AccountRegistry({ onAccountCreated, returnToEntry }: Reg
             onChange={(evt: ChangeEvent<HTMLInputElement>) => setAliasField(evt.target.value)}
             required
             minLength={3}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-orange-200 focus:border-hn-orange outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border-2 border-slate-grey-300 rounded-lg focus:ring-2 focus:ring-smoky-rose-200 focus:border-smoky-rose-500 outline-none transition-all bg-white"
             placeholder="cyberhacker99"
           />
         </div>
@@ -89,7 +92,7 @@ export default function AccountRegistry({ onAccountCreated, returnToEntry }: Reg
             value={mailField}
             onChange={(evt: ChangeEvent<HTMLInputElement>) => setMailField(evt.target.value)}
             required
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-orange-200 focus:border-hn-orange outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border-2 border-slate-grey-300 rounded-lg focus:ring-2 focus:ring-smoky-rose-200 focus:border-smoky-rose-500 outline-none transition-all bg-white"
             placeholder="name@domain.example"
           />
         </div>
@@ -105,7 +108,7 @@ export default function AccountRegistry({ onAccountCreated, returnToEntry }: Reg
             onChange={(evt: ChangeEvent<HTMLInputElement>) => setCodeField(evt.target.value)}
             required
             minLength={6}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-orange-200 focus:border-hn-orange outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border-2 border-slate-grey-300 rounded-lg focus:ring-2 focus:ring-smoky-rose-200 focus:border-smoky-rose-500 outline-none transition-all bg-white"
             placeholder="Min 6 chars required"
           />
         </div>
@@ -121,7 +124,7 @@ export default function AccountRegistry({ onAccountCreated, returnToEntry }: Reg
             onChange={(evt: ChangeEvent<HTMLInputElement>) => setVerifyField(evt.target.value)}
             required
             minLength={6}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-orange-200 focus:border-hn-orange outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border-2 border-slate-grey-300 rounded-lg focus:ring-2 focus:ring-smoky-rose-200 focus:border-smoky-rose-500 outline-none transition-all bg-white"
             placeholder="Repeat secret code"
           />
         </div>
@@ -129,18 +132,18 @@ export default function AccountRegistry({ onAccountCreated, returnToEntry }: Reg
         <button
           type="submit"
           disabled={isForging}
-          className="w-full bg-gradient-to-r from-hn-orange to-orange-600 text-white py-3 px-6 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all font-bold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+          className="w-full bg-smoky-rose-500 text-white py-3 px-6 rounded-lg transition-all font-bold border-2 border-smoky-rose-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isForging ? '⚒️ Creating Account...' : '✨ Create Account'}
+          {isForging ? 'Creating account...' : 'Create account'}
         </button>
       </form>
 
       <div className="mt-8 pt-6 border-t-2 border-gray-200">
         <button
           onClick={returnToEntry}
-          className="w-full text-center text-hn-orange hover:text-orange-600 text-sm font-bold transition-colors underline decoration-2 underline-offset-4"
+          className="w-full text-center text-sm font-bold transition-colors underline decoration-2 underline-offset-4 text-smoky-rose-600"
         >
-          ← Return to portal
+          Return to portal
         </button>
       </div>
     </div>

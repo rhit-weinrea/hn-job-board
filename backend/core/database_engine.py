@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy import text
 from sqlalchemy.orm import declarative_base
 from typing import AsyncGenerator
 from .configuration import fetch_environment_config
@@ -36,6 +37,18 @@ async def acquire_db_session() -> AsyncGenerator[AsyncSession, None]:
 async def setup_database_schema():
     async with async_engine.begin() as conn:
         await conn.run_sync(BaseEntity.metadata.create_all)
+        await conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS user_job_preferences "
+                "ADD COLUMN IF NOT EXISTS visa_sponsorship_only BOOLEAN DEFAULT FALSE"
+            )
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS user_job_preferences "
+                "ADD COLUMN IF NOT EXISTS last_notified_timestamp TIMESTAMPTZ"
+            )
+        )
 
 
 async def teardown_database():

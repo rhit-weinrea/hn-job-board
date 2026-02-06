@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from backend.core.configuration import fetch_environment_config
 from backend.core.database_engine import acquire_db_session
 from backend.data_models.models import UserAccount
@@ -38,7 +38,9 @@ def extract_token_data(token: str) -> Optional[dict]:
 
 
 async def validate_credentials(username: str, password: str, session: AsyncSession) -> Optional[UserAccount]:
-    stmt = select(UserAccount).where(UserAccount.username == username)
+    stmt = select(UserAccount).where(
+        or_(UserAccount.username == username, UserAccount.email_address == username)
+    )
     result = await session.execute(stmt)
     account = result.scalar_one_or_none()
     

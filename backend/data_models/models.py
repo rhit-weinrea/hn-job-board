@@ -48,11 +48,13 @@ class UserJobPreferences(BaseEntity):
     preferred_locations = Column(ARRAY(String))
     preferred_tech_stack = Column(ARRAY(String))
     remote_only = Column(Boolean, default=False)
+    visa_sponsorship_only = Column(Boolean, default=False)
     min_salary = Column(Integer)
     max_salary = Column(Integer)
     keywords_to_match = Column(ARRAY(String))
     keywords_to_exclude = Column(ARRAY(String))
     notification_enabled = Column(Boolean, default=True)
+    last_notified_timestamp = Column(DateTime(timezone=True))
     updated_timestamp = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     owner_rel = relationship("UserAccount", back_populates="preferences_rel")

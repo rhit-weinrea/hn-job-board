@@ -91,13 +91,23 @@ def extract_application_url(content: str) -> Optional[str]:
 
 
 def parse_with_regex(raw_content: str) -> Dict:
+    has_url = bool(_URL_PATTERN.search(raw_content))
+    has_company = find_company_name(raw_content) is not None
     return {
+        "is_posting": has_url or has_company,
         "company": find_company_name(raw_content),
         "title": None,
+        "roles": [],
         "location": find_location(raw_content),
         "remote_status": determine_remote_type(raw_content),
+        "workplace_type": determine_remote_type(raw_content) or "unknown",
+        "visa_sponsorship": "unknown",
+        "posted_at": None,
+        "apply_url": extract_application_url(raw_content),
+        "apply_contact": None,
         "technologies": extract_tech_keywords(raw_content),
         "salary": extract_salary_info(raw_content),
         "url": extract_application_url(raw_content),
+        "summary": raw_content[:500] if len(raw_content) > 500 else raw_content,
         "description": raw_content[:500] if len(raw_content) > 500 else raw_content
     }

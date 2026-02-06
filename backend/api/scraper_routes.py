@@ -23,7 +23,13 @@ async def initiate_scraping(
     orchestrator = JobScrapeOrchestrator()
     
     try:
-        outcome = await orchestrator.execute_scraping(session, force=payload.force_refresh)
+        outcome = await orchestrator.execute_scraping(
+            session,
+            force=payload.force_refresh,
+            parse=payload.parse,
+            who_is_hiring_id=payload.who_is_hiring_id,
+            max_items=payload.max_items
+        )
         
         return ScraperResultData(
             status=outcome["status"],
