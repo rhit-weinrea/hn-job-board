@@ -323,8 +323,11 @@ export default function ProfileManager() {
               <input
                 id="wage-floor"
                 type="number"
-                value={configuration.salary_min}
-                onChange={(evt) => setConfiguration({ ...configuration, salary_min: parseInt(evt.target.value) || 0 })}
+                value={configuration.salary_min || ''}
+                onChange={(evt) => {
+                  const value = evt.target.value;
+                  setConfiguration({ ...configuration, salary_min: value === '' ? 0 : parseInt(value) });
+                }}
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-orange-200 focus:border-hn-orange outline-none transition-all"
                 placeholder="0"
               />

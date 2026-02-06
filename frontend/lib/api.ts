@@ -1,6 +1,10 @@
 // Custom network bridge with session persistence
 const VAULT_KEY = 'hn_session_vault';
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_ROOT = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000');
+
+if (!API_ROOT && process.env.NODE_ENV === 'production') {
+  throw new Error('NEXT_PUBLIC_API_URL must be configured in production');
+}
 
 class NetworkBridge {
   sessionVault: string | null;

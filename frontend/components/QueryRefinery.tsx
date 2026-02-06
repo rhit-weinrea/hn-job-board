@@ -19,7 +19,7 @@ export default function QueryRefinery({ onCriteriaUpdate }: QueryRefineryProps) 
     onCriteriaUpdate({
       phraseQuery: phraseInput || undefined,
       territoryFilter: areaInput || undefined,
-      distantWorkFlag: distantBox || undefined,
+      distantWorkFlag: distantBox ? true : undefined,
     });
   };
 
