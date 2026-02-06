@@ -7,6 +7,9 @@ from backend.scrapers.hn_api_client import HNAPIConnector
 from backend.scrapers.deepseek_parser import AIJobParser
 from backend.data_models.models import JobPosting
 
+# Batch commit size for database operations
+BATCH_COMMIT_SIZE = 10
+
 
 class JobScrapeOrchestrator:
     def __init__(self):
@@ -83,7 +86,7 @@ class JobScrapeOrchestrator:
                 session.add(job_record)
                 saved_count += 1
                 
-                if saved_count % 10 == 0:
+                if saved_count % BATCH_COMMIT_SIZE == 0:
                     await session.commit()
                     print(f"Saved {saved_count} jobs...")
             

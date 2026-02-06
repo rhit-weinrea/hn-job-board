@@ -7,7 +7,7 @@ class EnvironmentConfig(BaseSettings):
     DATABASE_URL_SYNC: str
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days by default
     DEEPSEEK_API_KEY: str
     DEEPSEEK_API_URL: str = "https://api.deepseek.com/v1/chat/completions"
     DEEPSEEK_MODEL: str = "deepseek-chat"

@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from jose import jwt, JWTError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -25,7 +25,7 @@ def check_password(raw_password: str, encrypted: str) -> bool:
 
 def craft_access_token(payload: dict, expiry: Optional[timedelta] = None) -> str:
     to_encode = payload.copy()
-    expire_at = datetime.utcnow() + (expiry or timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire_at = datetime.now(timezone.utc) + (expiry or timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire_at})
     return jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
 

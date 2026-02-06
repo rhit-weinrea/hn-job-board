@@ -1,16 +1,29 @@
 import re
 from typing import Optional, Dict, List
 
+# Pre-compiled regex patterns for performance
+_COMPANY_PATTERNS = [
+    re.compile(r"(?:^|\n)([A-Z][A-Za-z0-9\s&\.,']+?)\s*(?:\||is hiring|\(|—)"),
+    re.compile(r"(?:company|Company):\s*([A-Za-z0-9\s&\.,']+)"),
+    re.compile(r"^([A-Z][A-Za-z0-9\s&\.,']{2,40})\s*[\|\-]"),
+]
+
+_LOCATION_PATTERNS = [
+    re.compile(r"(?:location|Location):\s*([A-Za-z\s,\-]+?)(?:\n|;|\||$)"),
+    re.compile(r"(?:based in|in)\s+([A-Z][a-z]+(?:,\s*[A-Z]{2})?)"),
+]
+
+_SALARY_PATTERNS = [
+    re.compile(r"\$\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:-|to|–)\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)"),
+    re.compile(r"salary:\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:-|to|–)\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)", re.IGNORECASE),
+]
+
+_URL_PATTERN = re.compile(r'https?://[^\s<>"{}|\\^`\[\]]+(?:\.[^\s<>"{}|\\^`\[\]]+)+')
+
 
 def find_company_name(content: str) -> Optional[str]:
-    company_patterns = [
-        r"(?:^|\n)([A-Z][A-Za-z0-9\s&\.,']+?)\s*(?:\||is hiring|\(|—)",
-        r"(?:company|Company):\s*([A-Za-z0-9\s&\.,']+)",
-        r"^([A-Z][A-Za-z0-9\s&\.,']{2,40})\s*[\|\-]",
-    ]
-    
-    for pattern in company_patterns:
-        match = re.search(pattern, content)
+    for pattern in _COMPANY_PATTERNS:
+        match = pattern.search(content)
         if match:
             name = match.group(1).strip()
             if 2 < len(name) < 100:
@@ -19,13 +32,8 @@ def find_company_name(content: str) -> Optional[str]:
 
 
 def find_location(content: str) -> Optional[str]:
-    location_patterns = [
-        r"(?:location|Location):\s*([A-Za-z\s,\-]+?)(?:\n|;|\||$)",
-        r"(?:based in|in)\s+([A-Z][a-z]+(?:,\s*[A-Z]{2})?)",
-    ]
-    
-    for pattern in location_patterns:
-        match = re.search(pattern, content, re.IGNORECASE)
+    for pattern in _LOCATION_PATTERNS:
+        match = pattern.search(content, re.IGNORECASE)
         if match:
             return match.group(1).strip()
     return None
@@ -70,21 +78,15 @@ def extract_tech_keywords(content: str) -> List[str]:
 
 
 def extract_salary_info(content: str) -> Optional[str]:
-    salary_patterns = [
-        r"\$\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:-|to|–)\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)",
-        r"salary:\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)\s*(?:-|to|–)\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:k|K)?)",
-    ]
-    
-    for pattern in salary_patterns:
-        match = re.search(pattern, content, re.IGNORECASE)
+    for pattern in _SALARY_PATTERNS:
+        match = pattern.search(content)
         if match:
             return f"${match.group(1)} - ${match.group(2)}"
     return None
 
 
 def extract_application_url(content: str) -> Optional[str]:
-    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+(?:\.[^\s<>"{}|\\^`\[\]]+)+'
-    matches = re.findall(url_pattern, content)
+    matches = _URL_PATTERN.findall(content)
     return matches[0] if matches else None
 
 

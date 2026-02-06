@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.core.database_engine import acquire_db_session
 from backend.data_models.schemas import (
     UserRegistrationPayload,
@@ -70,7 +70,7 @@ async def authenticate(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    account.last_login_timestamp = datetime.utcnow()
+    account.last_login_timestamp = datetime.now(timezone.utc)
     await session.commit()
     
     token = craft_access_token(data={"sub": account.username})
